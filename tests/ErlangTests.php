@@ -45,6 +45,24 @@ class AtomTestCase extends PHPUnit_Framework_TestCase
     {
         $atom1 = new \Erlang\OtpErlangAtom('test');
         $this->assertEquals(get_class($atom1), 'Erlang\OtpErlangAtom');
+        $this->assertEquals(new \Erlang\OtpErlangAtom('test'), $atom1);
+        $this->assertEquals('Erlang\OtpErlangAtom(test,utf8=false)',
+                            (string) $atom1);
+        $atom2 = new \Erlang\OtpErlangAtom('test2');
+        $atom1_new = new \Erlang\OtpErlangAtom('test');
+        $this->assertNotEquals($atom1, $atom2);
+        $this->assertEquals($atom1, $atom1_new);
+        $atom3 = new \Erlang\OtpErlangAtom(str_repeat('X', 256));
+        $this->assertEquals(str_repeat('X', 256), $atom3->value);
+    }
+    /**
+     * @expectedException \Erlang\OutputException
+     * @expectedExceptionMessage unknown atom type
+     */
+    public function test_invalid_atom()
+    {
+        $atom_invalid = new \Erlang\OtpErlangAtom(array(1, 2));
+        $atom_invalid->binary();
     }
 }
 

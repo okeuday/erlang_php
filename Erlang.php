@@ -123,7 +123,7 @@ class OtpErlangAtom
     public function __toString()
     {
         return sprintf('%s(%s,utf8=%s)', get_class(),
-                       $this->value, $this->utf8);
+                       $this->value, $this->utf8 ? 'true' : 'false');
     }
 }
 
