@@ -170,8 +170,9 @@ class OtpErlangList
     }
     public function __toString()
     {
-        return sprintf('%s(%s,improper=%s)', get_class(),
-                       $this->value, $this->improper);
+        return sprintf('%s(%d,improper=%s)', get_class(),
+                       count($this->value),
+                       $this->improper ? 'true' : 'false');
     }
 }
 
@@ -206,7 +207,7 @@ class OtpErlangBinary
     }
     public function __toString()
     {
-        return sprintf('%s(%s,bits=%s)', get_class(),
+        return sprintf('%s(%s,bits=%d)', get_class(),
                        $this->value, $this->bits);
     }
 }
@@ -338,6 +339,15 @@ class OtpErlangMap
     }
 }
 
+function _error_handler($errno = 0, $errstr = null,
+                        $errfile = null, $errline = null)
+{
+    // If error is suppressed with @, don't throw an exception
+    if (error_reporting() === 0)
+        return true; // return true to continue through the others handlers
+    throw new \ErrorException($errstr, 0, $errno, $errfile, $errline);
+}
+
 function binary_to_term($data)
 {
     if (! is_string($data))
@@ -345,13 +355,22 @@ function binary_to_term($data)
     $size = strlen($data);
     if ($size <= 1)
         throw new ParseException('null input');
-    if ($data[0] != TAG_VERSION)
+    if (ord($data[0]) != TAG_VERSION)
         throw new ParseException('invalid version');
-    // XXX catch exceptions found during testing
-    list($i, $term) = _binary_to_term(1, $data);
-    if ($i != $size)
-        throw new ParseException('unparsed data');
-    return $term;
+    $old_error_handler = set_error_handler('Erlang\_error_handler');
+    try
+    {
+        list($i, $term) = _binary_to_term(1, $data);
+        set_error_handler($old_error_handler);
+        if ($i != $size)
+            throw new ParseException('unparsed data');
+        return $term;
+    }
+    catch (\ErrorException $e)
+    {
+        set_error_handler($old_error_handler);
+        throw new ParseException((string) $e);
+    }
 }
 
 function term_to_binary($term, $compressed = false)
@@ -382,12 +401,12 @@ function _binary_to_term($i, $data)
     {
         case TAG_NEW_FLOAT_EXT:
             if (unpack('S', "\x01\x00") == array(1 => 1)) // little endian
-                list($value) = unpack('d', strrev(substr($data, $i, 8)));
+                list(, $value) = unpack('d', strrev(substr($data, $i, 8)));
             else
-                list($value) = unpack('d', substr($data, $i, 8));
+                list(, $value) = unpack('d', substr($data, $i, 8));
             return array($i + 8, $value);
         case TAG_BIT_BINARY_EXT:
-            list($j) = unpack('N', substr($data, $i, 4));
+            list(, $j) = unpack('N', substr($data, $i, 4));
             $i += 4;
             $bits = ord($data[i]);
             $i += 1;
@@ -399,14 +418,14 @@ function _binary_to_term($i, $data)
         case TAG_SMALL_INTEGER_EXT:
             return array($i + 1, ord($data[$i]));
         case TAG_INTEGER_EXT:
-            list($value) = unpack('N', substr($data, $i, 4));
+            list(, $value) = unpack('N', substr($data, $i, 4));
             if ($value & 0x80000000)
-                $value = -1 * ($value & 0x7fffffff);
+                $value = -2147483648 + ($value & 0x7fffffff);
             return array($i + 4, $value);
         case TAG_FLOAT_EXT:
             return array($i + 31, floatval(substr($data, $i, 31)));
         case TAG_ATOM_EXT:
-            list($j) = unpack('n', substr($data, $i, 2));
+            list(, $j) = unpack('n', substr($data, $i, 2));
             $i += 2;
             return array($i + $j, new OtpErlangAtom(substr($data, $i, $j)));
         case TAG_REFERENCE_EXT:
@@ -438,22 +457,23 @@ function _binary_to_term($i, $data)
             }
             elseif ($tag == TAG_LARGE_TUPLE_EXT)
             {
-                list($arity) = unpack('N', substr($data, $i, 4));
+                list(, $arity) = unpack('N', substr($data, $i, 4));
                 $i += 4;
             }
             return _binary_to_term_sequence($i, $arity, $data);
         case TAG_NIL_EXT:
             return array($i, new OtpErlangList(array()));
         case TAG_STRING_EXT:
-            list($j) = unpack('n', substr($data, $i, 2));
+            list(, $j) = unpack('n', substr($data, $i, 2));
             $i += 2;
             return array($i + $j, substr($data, $i, $j));
         case TAG_LIST_EXT:
-            list($arity) = unpack('N', substr($data, $i, 4));
+            list(, $arity) = unpack('N', substr($data, $i, 4));
             $i += 4;
             list($i, $tmp) = _binary_to_term_sequence($i, $arity, $data);
             list($i, $tail) = _binary_to_term($i, $data);
-            if (get_class($tail) != 'OtpErlangList' or $tail->value != array())
+            if (get_class($tail) != 'Erlang\OtpErlangList' or
+                $tail->value != array())
             {
                 array_push($tmp, $tail);
                 $tmp = new OtpErlangList($tmp, true);
@@ -464,7 +484,7 @@ function _binary_to_term($i, $data)
             }
             return array($i, $tmp);
         case TAG_BINARY_EXT:
-            list($j) = unpack('N', substr($data, $i, 4));
+            list(, $j) = unpack('N', substr($data, $i, 4));
             $i += 4;
             return array($i + $j,
                          new OtpErlangBinary(substr($data, $i, $j), 8));
@@ -477,22 +497,25 @@ function _binary_to_term($i, $data)
             }
             elseif ($tag == TAG_LARGE_BIG_EXT)
             {
-                list($j) = unpack('N', substr($data, $i, 4));
+                list(, $j) = unpack('N', substr($data, $i, 4));
                 $i += 4;
             }
             $sign = ord($data[$i]);
             $bignum = 0;
-            foreach (range(0, $j - 1) as $bignum_index)
+            if ($j > 0)
             {
-                $digit = ord($data[$i + $j - $bignum_index]);
-                $bignum = $bignum * 256 + $digit;
+                foreach (range(0, $j - 1) as $bignum_index)
+                {
+                    $digit = ord($data[$i + $j - $bignum_index]);
+                    $bignum = $bignum * 256 + $digit;
+                }
             }
             if ($sign == 1)
                 $bignum *= -1;
             $i += 1;
             return array($i + $j, $bignum);
         case TAG_NEW_FUN_EXT:
-            list($size) = unpack('N', substr($data, $i, 4));
+            list(, $size) = unpack('N', substr($data, $i, 4));
             return array($i + $size,
                          new OtpErlangFunction($tag, substr($data, $i, $size)));
         case TAG_EXPORT_EXT:
@@ -509,7 +532,7 @@ function _binary_to_term($i, $data)
                                                substr($data,
                                                       $old_i, $i - $old_i)));
         case TAG_NEW_REFERENCE_EXT:
-            list($j) = unpack('n', substr($data, $i, 2));
+            list(, $j) = unpack('n', substr($data, $i, 2));
             $j *= 4;
             $i += 2;
             list($i, $node) = _binary_to_atom($i, $data);
@@ -527,22 +550,25 @@ function _binary_to_term($i, $data)
             elseif ($atom_name == 'false')
                 $tmp = false;
             else
-                $tmp = new OtpErlangAtom(atom_name);
+                $tmp = new OtpErlangAtom($atom_name);
             return array($i + $j, $tmp);
         case TAG_MAP_EXT:
-            list($arity) = unpack('N', substr($data, $i, 4));
+            list(, $arity) = unpack('N', substr($data, $i, 4));
             $i += 4;
             $pairs = array();
-            foreach (range(0, $arity - 1) as $arity_index)
+            if ($arity > 0)
             {
-                list($i, $key) = _binary_to_term($i, $data);
-                list($i, $value) = _binary_to_term($i, $data);
-                array_push($pairs, array($key, $value));
+                foreach (range(0, $arity - 1) as $arity_index)
+                {
+                    list($i, $key) = _binary_to_term($i, $data);
+                    list($i, $value) = _binary_to_term($i, $data);
+                    array_push($pairs, array($key, $value));
+                }
             }
             return array($i, new OtpErlangMap($pairs));
         case TAG_FUN_EXT:
             $old_i = $i;
-            list($numfree) = unpack('N', substr($data, $i, 4));
+            list(, $numfree) = unpack('N', substr($data, $i, 4));
             $i += 4;
             list($i, $pid) = _binary_to_pid($i, $data);
             list($i, $name_module) = _binary_to_atom($i, $data);
@@ -554,7 +580,7 @@ function _binary_to_term($i, $data)
                                                substr($data,
                                                       $old_i, $i - $old_i)));
         case TAG_ATOM_UTF8_EXT:
-            list($j) = unpack('n', substr($data, $i, 2));
+            list(, $j) = unpack('n', substr($data, $i, 2));
             $i += 2;
             $atom_name = substr($data, $i, $j);
             return array($i + $j, new OtpErlangAtom($atom_name, true));
@@ -564,7 +590,7 @@ function _binary_to_term($i, $data)
             $atom_name = substr($data, $i, $j);
             return array($i + $j, new OtpErlangAtom($atom_name, true));
         case TAG_COMPRESSED_ZLIB:
-            list($size_uncompressed) = unpack('N', substr($data, $i, 4));
+            list(, $size_uncompressed) = unpack('N', substr($data, $i, 4));
             if ($size_uncompressed == 0)
                 throw new ParseException('compressed data null');
             $i += 4;
@@ -585,10 +611,13 @@ function _binary_to_term($i, $data)
 function _binary_to_term_sequence($i, $arity, $data)
 {
     $sequence = array();
-    foreach (range(0, $arity - 1) as $arity_index)
+    if ($arity > 0)
     {
-        list($i, $element) = _binary_to_term($i, $data);
-        array_push($sequence, $element);
+        foreach (range(0, $arity - 1) as $arity_index)
+        {
+            list($i, $element) = _binary_to_term($i, $data);
+            array_push($sequence, $element);
+        }
     }
     return array($i, $sequence);
 }
@@ -603,9 +632,9 @@ function _binary_to_integer($i, $data)
     }
     elseif ($tag == TAG_INTEGER_EXT)
     {
-        list($value) = unpack('N', substr($data, $i, 4));
+        list(, $value) = unpack('N', substr($data, $i, 4));
         if ($value & 0x80000000)
-            $value = -1 * ($value & 0x7fffffff);
+            $value = -2147483648 + ($value & 0x7fffffff);
         return array($i + 4, $value);
     }
     else
@@ -642,7 +671,7 @@ function _binary_to_atom($i, $data)
     switch ($tag)
     {
         case TAG_ATOM_EXT:
-            list($j) = unpack('n', substr($data, $i, 2));
+            list(, $j) = unpack('n', substr($data, $i, 2));
             $i += 2;
             return array($i + $j, new OtpErlangAtom(substr($data, $i, $j)));
         case TAG_ATOM_CACHE_REF:
@@ -652,7 +681,7 @@ function _binary_to_atom($i, $data)
             $i += 1;
             return array($i + $j, new OtpErlangAtom(substr($data, $i, $j)));
         case TAG_ATOM_UTF8_EXT:
-            list($j) = unpack('n', substr($data, $i, 2));
+            list(, $j) = unpack('n', substr($data, $i, 2));
             $i += 2;
             return array($i + $j,
                          new OtpErlangAtom(substr($data, $i, $j), true));
@@ -764,10 +793,13 @@ function _bignum_to_binary($term)
     else
         $sign = chr(0);
     $l = $sign;
-    foreach (range(0, $size - 1) as $byte)
+    if ($size > 0)
     {
-        $l .= chr($bignum & 255);
-        $bignum >>= 8;
+        foreach (range(0, $size - 1) as $byte)
+        {
+            $l .= chr($bignum & 255);
+            $bignum >>= 8;
+        }
     }
     if ($size < 256)
         return pack('CC', TAG_SMALL_BIG_EXT, $size) . $l;
