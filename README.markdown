@@ -8,5 +8,5 @@ in a single PHP file.
 Tests
 -----
 
-    phpunit --verbose tests/ErlangTests
+    phpunit
 

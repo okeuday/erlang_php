@@ -1,0 +1,20 @@
+<!---*-Mode:xml;coding:utf-8;tab-width:4;c-basic-offset:4;indent-tabs-mode:()-*-
+    ex: set ft=xml fenc=utf-8 sts=4 ts=4 sw=4 et:
+  -->
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="http://schema.phpunit.de/4.3/phpunit.xsd"
+         stopOnError="false"
+         stopOnFailure="false"
+         stopOnIncomplete="false"
+         stopOnSkipped="false"
+         timeoutForSmallTests="1"
+         timeoutForMediumTests="10"
+         timeoutForLargeTests="60"
+         strict="true"
+         verbose="true">
+    <testsuites>
+        <testsuite>
+            <file>tests/ErlangTests.php</file>
+        </testsuite>
+    </testsuites>
+</phpunit>
