@@ -387,7 +387,7 @@ function term_to_binary($term, $compressed = false)
         if ($compressed < 0 || $compressed > 9)
             throw new InputException('compressed in [0..9]');
         $data_compressed = gzcompress($data_uncompressed, $compressed);
-        $size_uncompressed = strlen($data_compressed);
+        $size_uncompressed = strlen($data_uncompressed);
         return pack("CCN", TAG_VERSION, TAG_COMPRESSED_ZLIB,
                     $size_uncompressed) . $data_compressed;
     }
@@ -765,12 +765,12 @@ function _tuple_to_binary($term)
     $term_packed = '';
     foreach ($term as $element)
     {
-        $term_packed .= term_to_binary_($element);
+        $term_packed .= _term_to_binary($element);
     }
     if ($arity < 256)
         return pack('CC', TAG_SMALL_TUPLE_EXT, $arity) . $term_packed;
     else
-        return pack('CN', TAG_SMALL_TUPLE_EXT, $arity) . $term_packed;
+        return pack('CN', TAG_LARGE_TUPLE_EXT, $arity) . $term_packed;
 }
 
 function _integer_to_binary($term)

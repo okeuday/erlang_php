@@ -48,7 +48,8 @@ class ErlangTests
         $cases = array('AtomTestCase',
                        'ListTestCase',
                        'ImproperListTestCase',
-                       'DecodeTestCase');
+                       'DecodeTestCase',
+                       'EncodeTestCase');
         foreach ($cases as $case)
         {
             foreach (get_class_methods($case) as $name)
@@ -520,6 +521,237 @@ class DecodeTestCase extends PHPUnit_Framework_TestCase
         $this->assertEquals(str_repeat('d', 20),
             \Erlang\binary_to_term("\x83P\0\0\0\x17\x78\xda\xcb\x66" .
                                    "\x10\x49\xc1\2\0\x5d\x60\x08\x50"));
+    }
+}
+
+class EncodeTestCase extends PHPUnit_Framework_TestCase
+{
+    public function test_term_to_binary_tuple()
+    {
+        $this->assertEquals("\x83h\0",
+            \Erlang\term_to_binary(array()));
+        $this->assertEquals("\x83h\2h\0h\0",
+            \Erlang\term_to_binary(array(array(), array())));
+        $this->assertEquals("\x83h\xff" . str_repeat("h\0", 255),
+            \Erlang\term_to_binary(array_fill(0, 255, array())));
+        $this->assertEquals("\x83i\0\0\1\0" . str_repeat("h\0", 256),
+            \Erlang\term_to_binary(array_fill(0, 256, array())));
+    }
+    public function test_term_to_binary_empty_list()
+    {
+        $this->assertEquals("\x83j",
+            \Erlang\term_to_binary(new \Erlang\OtpErlangList(array())));
+    }
+    public function test_term_to_binary_string_list()
+    {
+        $this->assertEquals("\x83k\0\1\0",
+            \Erlang\term_to_binary("\0"));
+        $s = '';
+        foreach (range(0, 256 - 1) as $c)
+            $s .= chr($c);
+        $this->assertEquals("\x83k\1\0" . $s,
+            \Erlang\term_to_binary($s));
+    }
+    public function test_term_to_binary_list_basic()
+    {
+        $this->assertEquals("\x83\x6A",
+            \Erlang\term_to_binary(new \Erlang\OtpErlangList(array())));
+        $this->assertEquals("\x83\x6C\x00\x00\x00\x01\x6A\x6A",
+            \Erlang\term_to_binary(new \Erlang\OtpErlangList(array(''))));
+        $this->assertEquals("\x83\x6C\x00\x00\x00\x01\x61\x01\x6A",
+            \Erlang\term_to_binary(new \Erlang\OtpErlangList(array(1))));
+        $this->assertEquals("\x83\x6C\x00\x00\x00\x01\x61\xFF\x6A",
+            \Erlang\term_to_binary(new \Erlang\OtpErlangList(array(255))));
+        $this->assertEquals("\x83\x6C\x00\x00\x00\x01\x62\x00\x00\x01\x00\x6A",
+            \Erlang\term_to_binary(new \Erlang\OtpErlangList(array(256))));
+        $this->assertEquals(
+            "\x83\x6C\x00\x00\x00\x01\x62\x7F\xFF\xFF\xFF\x6A",
+            \Erlang\term_to_binary(new \Erlang\OtpErlangList(
+                array(2147483647))));
+        $this->assertEquals(
+            "\x83\x6C\x00\x00\x00\x01\x6E\x04\x00\x00\x00\x00\x80\x6A",
+            \Erlang\term_to_binary(new \Erlang\OtpErlangList(
+                array(2147483648))));
+        $this->assertEquals("\x83\x6C\x00\x00\x00\x01\x61\x00\x6A",
+            \Erlang\term_to_binary(new \Erlang\OtpErlangList(array(0))));
+        $this->assertEquals("\x83\x6C\x00\x00\x00\x01\x62\xFF\xFF\xFF\xFF\x6A",
+            \Erlang\term_to_binary(new \Erlang\OtpErlangList(array(-1))));
+        $this->assertEquals("\x83\x6C\x00\x00\x00\x01\x62\xFF\xFF\xFF\x00\x6A",
+            \Erlang\term_to_binary(new \Erlang\OtpErlangList(array(-256))));
+        $this->assertEquals("\x83\x6C\x00\x00\x00\x01\x62\xFF\xFF\xFE\xFF\x6A",
+            \Erlang\term_to_binary(new \Erlang\OtpErlangList(array(-257))));
+        $this->assertEquals(
+            "\x83\x6C\x00\x00\x00\x01\x62\x80\x00\x00\x00\x6A",
+            \Erlang\term_to_binary(new \Erlang\OtpErlangList(
+                array(-2147483648))));
+        $this->assertEquals(
+            "\x83\x6C\x00\x00\x00\x01\x6E\x04\x01\x01\x00\x00\x80\x6A",
+            \Erlang\term_to_binary(new \Erlang\OtpErlangList(
+                array(-2147483649))));
+        $this->assertEquals(
+            "\x83\x6C\x00\x00\x00\x01\x6B\x00\x04\x74\x65\x73\x74\x6A",
+            \Erlang\term_to_binary(new \Erlang\OtpErlangList(
+                array('test'))));
+        $this->assertEquals(
+            "\x83\x6C\x00\x00\x00\x02\x62\x00\x00\x01\x75\x62\x00\x00" .
+            "\x01\xC7\x6A",
+            \Erlang\term_to_binary(new \Erlang\OtpErlangList(
+                array(373, 455))));
+        $this->assertEquals(
+            "\x83\x6C\x00\x00\x00\x01\x6A\x6A",
+            \Erlang\term_to_binary(new \Erlang\OtpErlangList(
+                array(new \Erlang\OtpErlangList(array())))));
+        $this->assertEquals(
+            "\x83\x6C\x00\x00\x00\x02\x6A\x6A\x6A",
+            \Erlang\term_to_binary(new \Erlang\OtpErlangList(
+                array(new \Erlang\OtpErlangList(array()),
+                      new \Erlang\OtpErlangList(array())))));
+        $this->assertEquals(
+            "\x83\x6C\x00\x00\x00\x03\x6C\x00\x00\x00\x02\x6B\x00\x04\x74\x68" .
+            "\x69\x73\x6B\x00\x02\x69\x73\x6A\x6C\x00\x00\x00\x01\x6C\x00\x00" .
+            "\x00\x01\x6B\x00\x01\x61\x6A\x6A\x6B\x00\x04\x74\x65\x73\x74\x6A",
+            \Erlang\term_to_binary(new \Erlang\OtpErlangList(
+                array(new \Erlang\OtpErlangList(array('this', 'is')),
+                      new \Erlang\OtpErlangList(array(
+                        new \Erlang\OtpErlangList(array('a')))),
+                      'test'))));
+    }
+    public function test_term_to_binary_list()
+    {
+        $this->assertEquals("\x83l\0\0\0\1jj",
+            \Erlang\term_to_binary(new \Erlang\OtpErlangList(
+                array(new \Erlang\OtpErlangList(array())))));
+        $this->assertEquals("\x83l\0\0\0\5jjjjjj",
+            \Erlang\term_to_binary(new \Erlang\OtpErlangList(
+                array(new \Erlang\OtpErlangList(array()),
+                      new \Erlang\OtpErlangList(array()),
+                      new \Erlang\OtpErlangList(array()),
+                      new \Erlang\OtpErlangList(array()),
+                      new \Erlang\OtpErlangList(array())))));
+    }
+    public function test_term_to_binary_improper_list()
+    {
+        $this->assertEquals("\x83l\0\0\0\1h\0h\0",
+            \Erlang\term_to_binary(new \Erlang\OtpErlangList(
+                array(array(), array()), true)));
+        $this->assertEquals("\x83l\0\0\0\1a\0a\1",
+            \Erlang\term_to_binary(new \Erlang\OtpErlangList(
+                array(0, 1), true)));
+    }
+    public function test_term_to_binary_atom()
+    {
+        $this->assertEquals("\x83s\0",
+            \Erlang\term_to_binary(new \Erlang\OtpErlangAtom('')));
+        $this->assertEquals("\x83s\4test",
+            \Erlang\term_to_binary(new \Erlang\OtpErlangAtom('test')));
+    }
+    public function test_term_to_binary_string_basic()
+    {
+        $this->assertEquals("\x83\x6A",
+            \Erlang\term_to_binary(''));
+        $this->assertEquals("\x83\x6B\x00\x04\x74\x65\x73\x74",
+            \Erlang\term_to_binary('test'));
+        $this->assertEquals(
+            "\x83\x6B\x00\x09\x74\x77\x6F\x20\x77\x6F\x72\x64\x73",
+            \Erlang\term_to_binary('two words'));
+        $this->assertEquals(
+            "\x83\x6B\x00\x16\x74\x65\x73\x74\x69\x6E\x67\x20\x6D\x75\x6C\x74" .
+            "\x69\x70\x6C\x65\x20\x77\x6F\x72\x64\x73",
+            \Erlang\term_to_binary('testing multiple words'));
+        $this->assertEquals("\x83\x6B\x00\x01\x20",
+            \Erlang\term_to_binary(' '));
+        $this->assertEquals("\x83\x6B\x00\x02\x20\x20",
+            \Erlang\term_to_binary('  '));
+        $this->assertEquals("\x83\x6B\x00\x01\x31",
+            \Erlang\term_to_binary('1'));
+        $this->assertEquals("\x83\x6B\x00\x02\x33\x37",
+            \Erlang\term_to_binary('37'));
+        $this->assertEquals("\x83\x6B\x00\x07\x6F\x6E\x65\x20\x3D\x20\x31",
+            \Erlang\term_to_binary('one = 1'));
+        $this->assertEquals(
+            "\x83\x6B\x00\x20\x21\x40\x23\x24\x25\x5E\x26\x2A\x28\x29\x5F\x2B" .
+            "\x2D\x3D\x5B\x5D\x7B\x7D\x5C\x7C\x3B\x27\x3A\x22\x2C\x2E\x2F\x3C" .
+            "\x3E\x3F\x7E\x60",
+            \Erlang\term_to_binary("!@#\$%^&*()_+-=[]{}\\|;':\",./<>?~`"));
+        $this->assertEquals(
+            "\x83\x6B\x00\x09\x22\x08\x0C\x0A\x0D\x09\x0B\x53\x12",
+            \Erlang\term_to_binary("\"\x8\f\n\r\t\v\123\x12"));
+    }
+    public function test_term_to_binary_string()
+    {
+        $this->assertEquals("\x83j", \Erlang\term_to_binary(''));
+        $this->assertEquals("\x83k\0\1\0",
+            \Erlang\term_to_binary("\0"));
+        $this->assertEquals("\x83k\0\4test",
+            \Erlang\term_to_binary('test'));
+    }
+    public function test_term_to_binary_boolean()
+    {
+        $this->assertEquals("\x83s\4true", \Erlang\term_to_binary(true));
+        $this->assertEquals("\x83s\5false", \Erlang\term_to_binary(false));
+    }
+    public function test_term_to_binary_short_integer()
+    {
+        $this->assertEquals("\x83a\0", \Erlang\term_to_binary(0));
+        $this->assertEquals("\x83a\xff", \Erlang\term_to_binary(255));
+    }
+    public function test_term_to_binary_integer()
+    {
+        $this->assertEquals("\x83b\xff\xff\xff\xff",
+                            \Erlang\term_to_binary(-1));
+        $this->assertEquals("\x83b\x80\0\0\0",
+                            \Erlang\term_to_binary(-2147483648));
+        $this->assertEquals("\x83b\0\0\1\0",
+                            \Erlang\term_to_binary(256));
+        $this->assertEquals("\x83b\x7f\xff\xff\xff",
+                            \Erlang\term_to_binary(2147483647));
+    }
+    public function test_term_to_binary_long_integer()
+    {
+        $this->assertEquals("\x83n\4\0\0\0\0\x80",
+                            \Erlang\term_to_binary(2147483648));
+        $this->assertEquals("\x83n\4\1\1\0\0\x80",
+                            \Erlang\term_to_binary(-2147483649));
+    }
+    public function test_term_to_binary_float()
+    {
+        $this->assertEquals("\x83F\0\0\0\0\0\0\0\0",
+                            \Erlang\term_to_binary(0.0));
+        $this->assertEquals("\x83F?\xe0\0\0\0\0\0\0",
+                            \Erlang\term_to_binary(0.5));
+        $this->assertEquals("\x83F\xbf\xe0\0\0\0\0\0\0",
+                            \Erlang\term_to_binary(-0.5));
+        $this->assertEquals("\x83F@\t!\xfbM\x12\xd8J",
+                            \Erlang\term_to_binary(3.1415926));
+        $this->assertEquals("\x83F\xc0\t!\xfbM\x12\xd8J",
+                            \Erlang\term_to_binary(-3.1415926));
+    }
+    public function test_term_to_compressed_term()
+    {
+        $this->assertEquals(
+            "\x83P\x00\x00\x00\x15x\x9c\xcba``\xe0\xcfB\x03\x00B@\x07\x1c",
+            \Erlang\term_to_binary(new \Erlang\OtpErlangList(
+                array_fill(0, 15, new \Erlang\OtpErlangList(array()))),
+                true));
+        $this->assertEquals(
+            "\x83P\x00\x00\x00\x15x\x9c\xcba``\xe0\xcfB\x03\x00B@\x07\x1c",
+            \Erlang\term_to_binary(new \Erlang\OtpErlangList(
+                array_fill(0, 15, new \Erlang\OtpErlangList(array()))),
+                6));
+        $this->assertEquals(
+            "\x83P\x00\x00\x00\x15x\xda\xcba``\xe0\xcfB\x03\x00B@\x07\x1c",
+            \Erlang\term_to_binary(new \Erlang\OtpErlangList(
+                array_fill(0, 15, new \Erlang\OtpErlangList(array()))),
+                9));
+        $this->assertEquals(
+            "\x83P\x00\x00\x00\x15x\x01\x01\x15\x00\xea\xffl\x00\x00\x00" .
+            "\x0fjjjjjjjjjjjjjjjjB@\x07\x1c",
+            \Erlang\term_to_binary(new \Erlang\OtpErlangList(
+                array_fill(0, 15, new \Erlang\OtpErlangList(array()))),
+                0));
+        $this->assertEquals(
+            "\x83P\0\0\0\x17\x78\xda\xcb\x66\x10\x49\xc1\2\0\x5d\x60\x08\x50",
+            \Erlang\term_to_binary(str_repeat('d', 20), 9));
     }
 }
 
