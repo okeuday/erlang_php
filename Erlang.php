@@ -41,34 +41,34 @@
 namespace Erlang;
 
 // tag values here http://www.erlang.org/doc/apps/erts/erl_ext_dist.html
-define('TAG_VERSION', 131);
-define('TAG_COMPRESSED_ZLIB', 80);
-define('TAG_NEW_FLOAT_EXT', 70);
-define('TAG_BIT_BINARY_EXT', 77);
-define('TAG_ATOM_CACHE_REF', 78);
-define('TAG_SMALL_INTEGER_EXT', 97);
-define('TAG_INTEGER_EXT', 98);
-define('TAG_FLOAT_EXT', 99);
-define('TAG_ATOM_EXT', 100);
-define('TAG_REFERENCE_EXT', 101);
-define('TAG_PORT_EXT', 102);
-define('TAG_PID_EXT', 103);
-define('TAG_SMALL_TUPLE_EXT', 104);
-define('TAG_LARGE_TUPLE_EXT', 105);
-define('TAG_NIL_EXT', 106);
-define('TAG_STRING_EXT', 107);
-define('TAG_LIST_EXT', 108);
-define('TAG_BINARY_EXT', 109);
-define('TAG_SMALL_BIG_EXT', 110);
-define('TAG_LARGE_BIG_EXT', 111);
-define('TAG_NEW_FUN_EXT', 112);
-define('TAG_EXPORT_EXT', 113);
-define('TAG_NEW_REFERENCE_EXT', 114);
-define('TAG_SMALL_ATOM_EXT', 115);
-define('TAG_MAP_EXT', 116);
-define('TAG_FUN_EXT', 117);
-define('TAG_ATOM_UTF8_EXT', 118);
-define('TAG_SMALL_ATOM_UTF8_EXT', 119);
+define(__NAMESPACE__ . '\TAG_VERSION', 131);
+define(__NAMESPACE__ . '\TAG_COMPRESSED_ZLIB', 80);
+define(__NAMESPACE__ . '\TAG_NEW_FLOAT_EXT', 70);
+define(__NAMESPACE__ . '\TAG_BIT_BINARY_EXT', 77);
+define(__NAMESPACE__ . '\TAG_ATOM_CACHE_REF', 78);
+define(__NAMESPACE__ . '\TAG_SMALL_INTEGER_EXT', 97);
+define(__NAMESPACE__ . '\TAG_INTEGER_EXT', 98);
+define(__NAMESPACE__ . '\TAG_FLOAT_EXT', 99);
+define(__NAMESPACE__ . '\TAG_ATOM_EXT', 100);
+define(__NAMESPACE__ . '\TAG_REFERENCE_EXT', 101);
+define(__NAMESPACE__ . '\TAG_PORT_EXT', 102);
+define(__NAMESPACE__ . '\TAG_PID_EXT', 103);
+define(__NAMESPACE__ . '\TAG_SMALL_TUPLE_EXT', 104);
+define(__NAMESPACE__ . '\TAG_LARGE_TUPLE_EXT', 105);
+define(__NAMESPACE__ . '\TAG_NIL_EXT', 106);
+define(__NAMESPACE__ . '\TAG_STRING_EXT', 107);
+define(__NAMESPACE__ . '\TAG_LIST_EXT', 108);
+define(__NAMESPACE__ . '\TAG_BINARY_EXT', 109);
+define(__NAMESPACE__ . '\TAG_SMALL_BIG_EXT', 110);
+define(__NAMESPACE__ . '\TAG_LARGE_BIG_EXT', 111);
+define(__NAMESPACE__ . '\TAG_NEW_FUN_EXT', 112);
+define(__NAMESPACE__ . '\TAG_EXPORT_EXT', 113);
+define(__NAMESPACE__ . '\TAG_NEW_REFERENCE_EXT', 114);
+define(__NAMESPACE__ . '\TAG_SMALL_ATOM_EXT', 115);
+define(__NAMESPACE__ . '\TAG_MAP_EXT', 116);
+define(__NAMESPACE__ . '\TAG_FUN_EXT', 117);
+define(__NAMESPACE__ . '\TAG_ATOM_UTF8_EXT', 118);
+define(__NAMESPACE__ . '\TAG_SMALL_ATOM_UTF8_EXT', 119);
 
 class OtpErlangAtom
 {
