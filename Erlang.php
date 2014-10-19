@@ -357,18 +357,18 @@ function binary_to_term($data)
         throw new ParseException('null input');
     if (ord($data[0]) != TAG_VERSION)
         throw new ParseException('invalid version');
-    $old_error_handler = set_error_handler('Erlang\_error_handler');
+    set_error_handler('Erlang\_error_handler');
     try
     {
         list($i, $term) = _binary_to_term(1, $data);
-        set_error_handler($old_error_handler);
+        restore_error_handler();
         if ($i != $size)
             throw new ParseException('unparsed data');
         return $term;
     }
     catch (\ErrorException $e)
     {
-        set_error_handler($old_error_handler);
+        restore_error_handler();
         throw new ParseException((string) $e);
     }
 }
