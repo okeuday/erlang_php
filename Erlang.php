@@ -562,7 +562,7 @@ function _binary_to_term($i, $data)
             if (ord($data[$i]) != TAG_SMALL_INTEGER_EXT)
                 throw new ParseException('invalid small integer tag');
             $i += 1;
-            $length = ord($data[$i]);
+            $arity = ord($data[$i]);
             $i += 1;
             return array($i,
                          new OtpErlangFunction($tag,
