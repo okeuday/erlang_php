@@ -44,7 +44,14 @@ class ErlangTests
 {
     public static function suite()
     {
-        $suite = new PHPUnit_Framework_TestSuite();
+        if (version_compare(phpversion(), '7', '<'))
+        {
+            $suite = new PHPUnit_Framework_TestSuite();
+        }
+        else
+        {
+            $suite = new PHPUnit\Framework\TestCase();
+        }
         $cases = array('AtomTestCase',
                        'ListTestCase',
                        'ImproperListTestCase',
