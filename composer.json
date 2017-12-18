@@ -1,0 +1,19 @@
+{
+    "name": "okeuday/erlang_php",
+    "type": "library",
+    "description": "Erlang Binary Term Format for PHP",
+    "keywords": ["erlang"],
+    "homepage": "https://github.com/okeuday/erlang_php",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Michael Truog",
+            "email": "mjtruog@gmail.com",
+            "homepage": "https://github.com/okeuday/",
+            "role": "Developer"
+        }
+    ],
+    "require": {
+        "php": ">=5.3.6"
+    }
+}
