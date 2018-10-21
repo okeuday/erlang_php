@@ -1,9 +1,8 @@
-dist: trusty
 language: php
 php:
   - 7.1
   - 7.0
-  - hhvm
+#  - hhvm # phpunit 6.5.2 failed with HipHop VM 3.28.3
 branches:
   only:
     - master
