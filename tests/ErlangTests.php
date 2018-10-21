@@ -30,7 +30,7 @@ class ErlangTests
 {
     public static function suite()
     {
-        $suite = new PHPUnit_Framework_TestSuite();
+        $suite = new PHPUnit\Framework\TestSuite();
         $cases = array('AtomTestCase',
                        'ListTestCase',
                        'ImproperListTestCase',
@@ -54,7 +54,7 @@ class ErlangTests
 // from erlport (https://github.com/hdima/erlport)
 // to make the tests more exhaustive
 
-class AtomTestCase extends PHPUnit_Framework_TestCase
+class AtomTestCase extends PHPUnit\Framework\TestCase
 {
     public function test_atom()
     {
@@ -79,7 +79,7 @@ class AtomTestCase extends PHPUnit_Framework_TestCase
     }
 }
 
-class ListTestCase extends PHPUnit_Framework_TestCase
+class ListTestCase extends PHPUnit\Framework\TestCase
 {
     public function test_list()
     {
@@ -94,7 +94,7 @@ class ListTestCase extends PHPUnit_Framework_TestCase
     }
 }
 
-class ImproperListTestCase extends PHPUnit_Framework_TestCase
+class ImproperListTestCase extends PHPUnit\Framework\TestCase
 {
     public function test_improper_list()
     {
@@ -127,7 +127,7 @@ class ImproperListTestCase extends PHPUnit_Framework_TestCase
     }
 }
 
-class DecodeTestCase extends PHPUnit_Framework_TestCase
+class DecodeTestCase extends PHPUnit\Framework\TestCase
 {
     public function test_binary_to_term_1()
     {
@@ -512,7 +512,7 @@ class DecodeTestCase extends PHPUnit_Framework_TestCase
     }
 }
 
-class EncodeTestCase extends PHPUnit_Framework_TestCase
+class EncodeTestCase extends PHPUnit\Framework\TestCase
 {
     public function test_term_to_binary_tuple()
     {
