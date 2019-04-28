@@ -1,8 +1,9 @@
 language: php
 php:
-  - 7.1
+  - 5.6
   - 7.0
-#  - hhvm # phpunit 6.5.2 failed with HipHop VM 3.28.3
+  - 7.1
+  - 7.2
 branches:
   only:
     - master
