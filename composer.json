@@ -1,7 +1,7 @@
 {
     "name": "okeuday/erlang_php",
     "type": "library",
-    "description": "Erlang Binary Term Format for PHP",
+    "description": "Erlang External Term Format for PHP",
     "keywords": ["erlang"],
     "homepage": "https://github.com/okeuday/erlang_php",
     "license": "MIT",
