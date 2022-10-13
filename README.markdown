@@ -1,7 +1,7 @@
 Erlang External Term Format for PHP
 ===================================
 
-[![Build Status](https://secure.travis-ci.org/okeuday/erlang_php.png?branch=master)](http://travis-ci.org/okeuday/erlang_php)
+[![Build Status](https://app.travis-ci.com/okeuday/erlang_php.svg?branch=master)](https://app.travis-ci.com/okeuday/erlang_php)
 [![Packagist Package Version](https://img.shields.io/packagist/v/okeuday/erlang_php.svg?maxAge=2592000)](https://packagist.org/packages/okeuday/erlang_php)
 
 Provides all encoding and decoding for the Erlang External Term Format
