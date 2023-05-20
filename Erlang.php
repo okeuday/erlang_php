@@ -305,13 +305,13 @@ class OtpErlangPort
     }
     public function binary()
     {
-        $creation_size = strlen($this->creation);
         $id_size = strlen($this->id);
         if ($id_size == 8) {
             return chr(TAG_V4_PORT_EXT) .
                    $this->node->binary() . $this->id . $this->creation;
         }
-        elseif ($creation_size == 4) {
+        $creation_size = strlen($this->creation);
+        if ($creation_size == 4) {
             return chr(TAG_NEW_PORT_EXT) .
                    $this->node->binary() . $this->id . $this->creation;
         }
